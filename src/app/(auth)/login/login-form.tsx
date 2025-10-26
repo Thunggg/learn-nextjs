@@ -1,5 +1,6 @@
 "use client";
 
+import authApiRequest from "@/api-resquest/auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,15 +11,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import envConfig from "@/config/config";
 import { useAppContext } from "@/context/app-provider";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 const LoginForm = () => {
   const { sessionToken, setSessionToken } = useAppContext();
+  const router = useRouter();
 
   // 1. Define your form.
   const form = useForm<LoginBodyType>({
@@ -32,51 +34,20 @@ const LoginForm = () => {
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
     try {
-      const result = await fetch(
-        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/login`,
-        {
-          body: JSON.stringify(values),
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-        }
-      ).then(async (res) => {
-        const payload = await res.json();
-        const data = {
-          status: res.status,
-          payload,
-        };
-        if (!res.ok) {
-          throw data;
-        }
-        return data;
+      const result = await authApiRequest.login(values);
+
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
       });
 
-      const resultFromtNextServer = await fetch("/api/auth", {
-        body: JSON.stringify(result),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }).then(async (res) => {
-        const payload = await res.json();
-        const data = {
-          status: res.status,
-          payload,
-        };
-        if (!res.ok) {
-          throw data;
-        }
-        return data;
-      });
-
-      setSessionToken(resultFromtNextServer.payload.data.token);
+      setSessionToken(result.payload.data.token);
 
       toast.success("Đăng nhập thành công", {
         position: "top-right",
         richColors: true,
       });
+
+      router.push("/me");
     } catch (error: any) {
       const errors = (error as any).payload.errors as {
         field: string;

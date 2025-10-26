@@ -4,8 +4,16 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
 
   const res = await request.json();
-  const sessionToken = res.payload.data.token;
-  cookieStore.set("sessionToken", sessionToken, {path: "/" ,  httpOnly: true});
+  const sessionToken = res.sessionToken as string;
 
-  return Response.json(res.payload);
+  if (!sessionToken) {
+    return Response.json(
+      { message: "không nhận được session token" },
+      { status: 400 }
+    );
+  }
+
+  cookieStore.set("sessionToken", sessionToken, { path: "/", httpOnly: true });
+
+  return Response.json(res);
 }

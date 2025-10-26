@@ -1,5 +1,6 @@
 "use client";
 
+import authApiRequest from "@/api-resquest/auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,15 +11,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import envConfig from "@/config/config";
+import { useAppContext } from "@/context/app-provider";
 import {
   RegisterBody,
   RegisterBodyType,
 } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const RegisterForm = () => {
+  const router = useRouter();
+  const { sessionToken, setSessionToken } = useAppContext();
+
   // 1. Define your form.
   const form = useForm<RegisterBodyType>({
     resolver: zodResolver(RegisterBody),
@@ -32,18 +38,42 @@ const RegisterForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: RegisterBodyType) {
-    const result = await fetch(
-      `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/register`,
-      {
-        body: JSON.stringify(values),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }
-    ).then((res) => res.json());
+    try {
+      const result = await authApiRequest.register(values);
 
-    console.log(result);
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
+      });
+
+      setSessionToken(result.payload.data.token);
+
+      toast.success("Đăng nhập thành công", {
+        position: "top-right",
+        richColors: true,
+      });
+
+      router.push("/me");
+    } catch (error: any) {
+      const errors = (error as any).payload.errors as {
+        field: string;
+        message: string;
+      }[];
+      const status = error.status as number;
+      if (status === 422) {
+        errors.forEach((error) => {
+          form.setError(error.field as "email" | "password", {
+            type: "server",
+            message: error.message,
+          });
+        });
+      } else {
+        toast.warning("Lỗi", {
+          description: error.payload.message,
+          position: "top-right",
+          richColors: true,
+        });
+      }
+    }
   }
 
   return (
