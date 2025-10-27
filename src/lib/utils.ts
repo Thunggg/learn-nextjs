@@ -14,7 +14,7 @@ export const handleErrorApi = ({
   duration,
 }: {
   error: any;
-  setError: UseFormSetError<any>;
+  setError?: UseFormSetError<any>;
   duration: number;
 }) => {
   if (error instanceof EntityError && setError) {
@@ -32,4 +32,9 @@ export const handleErrorApi = ({
       }
     );
   }
+};
+
+// xóa đi dấu / ở đầu path nếu có
+export const normalizePath = (path: string) => {
+  return path.startsWith("/") ? path.slice(1) : path;
 };
