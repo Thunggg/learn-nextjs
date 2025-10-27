@@ -11,13 +11,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { handleErrorApi } from "@/lib/utils";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 const LoginForm = () => {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   // 1. Define your form.
@@ -31,6 +34,8 @@ const LoginForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: LoginBodyType) {
+    if (loading) return;
+    setLoading(true);
     try {
       const result = await authApiRequest.login(values);
 
@@ -45,25 +50,13 @@ const LoginForm = () => {
 
       router.push("/me");
     } catch (error: any) {
-      const errors = (error as any).payload.errors as {
-        field: string;
-        message: string;
-      }[];
-      const status = error.status as number;
-      if (status === 422) {
-        errors.forEach((error) => {
-          form.setError(error.field as "email" | "password", {
-            type: "server",
-            message: error.message,
-          });
-        });
-      } else {
-        toast.warning("Lỗi", {
-          description: error.payload.message,
-          position: "top-right",
-          richColors: true,
-        });
-      }
+      handleErrorApi({
+        error,
+        setError: form.setError,
+        duration: 3000,
+      });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -101,7 +94,7 @@ const LoginForm = () => {
           )}
         />
 
-        <Button className="mt-2 w-full" type="submit">
+        <Button disabled={loading} className="mt-2 w-full" type="submit">
           Submit
         </Button>
       </form>
