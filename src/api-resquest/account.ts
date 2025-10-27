@@ -1,4 +1,4 @@
-import { http } from "@/lib/http";
+import http from "@/lib/http";
 import { AccountResType } from "@/schemaValidations/account.schema";
 
 const accountApiRequest = {
@@ -8,6 +8,7 @@ const accountApiRequest = {
         Authorization: `Bearer ${sessionToken}`,
       },
     }),
-};
 
+  meClient: () => http.get<AccountResType>("/account/me"),
+};
 export default accountApiRequest;

@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAppContext } from "@/context/app-provider";
 import {
   RegisterBody,
   RegisterBodyType,
@@ -23,7 +22,6 @@ import { toast } from "sonner";
 
 const RegisterForm = () => {
   const router = useRouter();
-  const { sessionToken, setSessionToken } = useAppContext();
 
   // 1. Define your form.
   const form = useForm<RegisterBodyType>({
@@ -42,10 +40,8 @@ const RegisterForm = () => {
       const result = await authApiRequest.register(values);
 
       await authApiRequest.auth({
-        sessionToken: result.payload.data.token,
+        sessionToken: result?.payload.data.token as string,
       });
-
-      setSessionToken(result.payload.data.token);
 
       toast.success("Đăng nhập thành công", {
         position: "top-right",

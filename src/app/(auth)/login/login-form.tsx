@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAppContext } from "@/context/app-provider";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -19,7 +18,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 const LoginForm = () => {
-  const { sessionToken, setSessionToken } = useAppContext();
   const router = useRouter();
 
   // 1. Define your form.
@@ -37,10 +35,8 @@ const LoginForm = () => {
       const result = await authApiRequest.login(values);
 
       await authApiRequest.auth({
-        sessionToken: result.payload.data.token,
+        sessionToken: result?.payload.data.token as string,
       });
-
-      setSessionToken(result.payload.data.token);
 
       toast.success("Đăng nhập thành công", {
         position: "top-right",

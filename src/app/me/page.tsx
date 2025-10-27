@@ -1,6 +1,7 @@
 import accountApiRequest from "@/api-resquest/account";
 import { cookies } from "next/headers";
 import { toast } from "sonner";
+import Profile from "./profile";
 
 export default async function MeProfile() {
   try {
@@ -15,5 +16,11 @@ export default async function MeProfile() {
   } catch (error: any) {
     console.log(error);
   }
-  return <div>Me</div>;
+  return (
+    <>
+      <div>
+        <Profile />
+      </div>
+    </>
+  );
 }
